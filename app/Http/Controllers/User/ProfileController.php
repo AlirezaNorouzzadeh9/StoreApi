@@ -8,7 +8,7 @@ use App\Models\User\User;
 use App\Services\OtpService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use App\Http\Resources\User\AuthMeResource;
 
 class ProfileController extends Controller
 {
@@ -19,8 +19,8 @@ class ProfileController extends Controller
     }
     public function authMe(Request $request)
     {
-        $user = $request->user();
-        return $this->success($user, 'User profile retrieved successfully.');
+        $user = $request->user()->load(['addresses.province', 'addresses.city']);
+        return $this->success(new AuthMeResource($user), 'User profile retrieved successfully.');
     }
 
     public function changeGeneral(UpdateRequest $request)
@@ -130,6 +130,12 @@ class ProfileController extends Controller
         $user->password = $request->input('new_password');
         $user->save();
                 return $this->success(null, 'Password updated successfully.');
+    }
+
+    public function logout(Request $request){
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+        return $this->success(null, 'Logged out successfully.');
     }
 
 
